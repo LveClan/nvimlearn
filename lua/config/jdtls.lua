@@ -87,6 +87,11 @@ local function get_workspace()
 	local workspace_path = home .. "/code/workspace/"
 
 	-- 取当前工作目录（cwd）的项目名作为子目录名
+	-- 这里用 ":p:h:t" 是为了“稳定取到当前目录名”：
+	-- - :p 会把目录规范化成绝对路径，并可能带上结尾的 "/"（例如 /a/b/c/）
+	-- - 如果直接 :p:t，遇到结尾 "/" 时 :t 可能会变成空字符串
+	-- - 先 :h 去掉结尾 "/"（回到 /a/b/c），再 :t 才能得到目录名 c
+	-- 也不要写成 :h:t：因为那会先取父目录 /a/b，再取目录名 b（会变成“父目录名”）
 	local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ":p:h:t")
 	local workspace_dir = workspace_path .. project_name
 
