@@ -1,31 +1,31 @@
--- Declare the path where lazy will clone plugin code
+-- 声明 lazy.nvim 克隆插件代码的路径
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 
--- Check to see if lazy itself has been cloned, if not clone it into the lazy.nvim directory
-if not (vim.uv or vim.loop).fs_sat(lazypath) then
+-- 检查 lazy.nvim 是否已被克隆；若没有则克隆到 lazy.nvim 目录
+if not (vim.uv or vim.loop).fs_stat(lazypath) then
 	vim.fn.system({
 		"git",
 		"clone",
 		"--filter=blob:none",
 		"https://github.com/folke/lazy.nvim.git",
-		"--branch=stable", -- latest stable release
+		"--branch=stable", -- 最新稳定版
 		lazypath,
 	})
 end
 
--- Add the path to the lazy plugin repositories to the vim runtime path
+-- 将 lazy.nvim 的路径加入运行时路径（rtp）
 vim.opt.rtp:prepend(lazypath)
 
--- Declare a few options for lazy
+-- 声明一些 lazy.nvim 的选项
 local opts = {
 	change_detection = {
-		-- Don't notify us every time a change is made to the configuration
+		-- 配置变更时不弹出通知
 		notify = false,
 	},
 	checker = {
-		-- Automatically check for package updates
+		-- 自动检查插件更新
 		enabled = true,
-		-- Don't spam us with notification every time there is an update available
+		-- 有更新时不频繁弹通知
 		notify = false,
 	},
 }
@@ -33,7 +33,7 @@ local opts = {
 require("config.options")
 require("config.keymaps")
 
--- Setup lazy, this should always be last
--- Tell lazy that all plugin specs are found in the plugins directory
--- Pass it the options we specified above
+-- 配置 lazy.nvim（建议放在最后执行）
+-- 告诉 lazy：所有插件 specs 都在 plugins 目录中
+-- 传入上面定义的选项
 require("lazy").setup("plugins", opts)
