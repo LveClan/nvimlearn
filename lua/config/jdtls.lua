@@ -25,6 +25,9 @@ local function get_jdtls()
 	local jdtls_path = jdtls:get_install_path()
 
 	-- 启动语言服务器的 jar：org.eclipse.equinox.launcher_*.jar（版本号会变，所以用 glob 匹配）
+	-- 小白提示：
+	-- - vim.fn.glob(...) 返回的是“字符串”，若匹配到多个文件，可能会用换行拼在一起
+	-- - 这里通常只会匹配到 1 个 launcher；如果你遇到启动报错，可以检查这里是否拿到了正确路径
 	local launcher = vim.fn.glob(jdtls_path .. "/plugins/org.eclipse.equinox.launcher_*.jar")
 
 	-- 操作系统标识：jdtls 的配置目录按系统区分
@@ -32,6 +35,7 @@ local function get_jdtls()
 	-- - macOS：config_mac
 	-- - Windows：config_win
 	-- 这里写死为 linux：如果你不是 Linux，需要改这个值
+	-- 小白提示：更通用的做法是“自动识别系统”，例如根据 vim.loop.os_uname() / vim.fn.has("win32") 等判断
 	local SYSTEM = "linux"
 
 	-- jdtls 的系统配置目录（里面包含 launcher 需要的各种 ini/配置）
@@ -51,6 +55,7 @@ local function get_bundles()
 	local mason_registry = require("mason-registry")
 
 	-- java-debug-adapter：mason 包名
+	-- 小白提示：如果你还没装这些包，会在这里报错；可用 :Mason 打开界面安装/更新
 	local java_debug = mason_registry.get_package("java-debug-adapter")
 	local java_debug_path = java_debug:get_install_path()
 
@@ -78,6 +83,7 @@ local function get_workspace()
 
 	-- 你希望存放 workspace 的根目录
 	-- 注意：这个目录需要存在；如果不存在，jdtls 可能启动失败
+	-- 小白提示：如果你想自动创建目录，可以用 vim.fn.mkdir(workspace_path, "p")（p 表示递归创建）
 	local workspace_path = home .. "/code/workspace/"
 
 	-- 取当前工作目录（cwd）的项目名作为子目录名
@@ -150,6 +156,7 @@ local function setup_jdtls()
 
 	-- root_dir：jdtls 用它判断“这个 Java 项目在哪里”，并据此启动/复用语言服务器
 	-- 一般会根据 .git/mvnw/gradlew/pom.xml/build.gradle 等标记来判断项目根
+	-- 小白提示：如果找不到这些标记，root_dir 可能为 nil；这会导致 jdtls 启动/复用行为不稳定
 	local root_dir = jdtls.setup.find_root({ ".git", "mvnw", "gradlew", "pom.xml", "build.gradle" })
 
 	-- capabilities：告诉语言服务器客户端支持哪些特性
@@ -166,6 +173,7 @@ local function setup_jdtls()
 	}
 
 	-- 把 nvim-cmp 的补全能力合并进去（否则部分补全能力不会被 LSP 充分利用）
+	-- 小白提示：这里是“浅合并”（只合并第一层 key）；一般够用，但如果你深度自定义 capabilities，可能需要更细的合并策略
 	local lsp_capabilities = require("cmp_nvim_lsp").default_capabilities()
 
 	for k, v in pairs(lsp_capabilities) do
@@ -180,6 +188,10 @@ local function setup_jdtls()
 
 	-- cmd：启动 jdtls 的命令行参数
 	-- 小白提示：这里的 cmd 是一个“字符串数组”，Neovim 会按数组逐项传给系统执行
+	-- 额外提示（常见踩坑）：
+	-- - 需要系统里能找到 java（PATH 里有 Java 可执行文件）；否则 jdtls 无法启动
+	-- - 如果启动报 UnsupportedClassVersionError，通常是你的 JDK 版本太旧，需要升级
+	-- - -Xmx1g 是最大堆内存，项目很大时可以适当调大
 	local cmd = {
 		"java",
 		"-Declipse.application=org.eclipse.jdt.ls.core.id1",
@@ -318,6 +330,8 @@ local function setup_jdtls()
 	-- on_attach：当 jdtls 成功附加到当前 buffer 后执行（这里最适合放 buffer 本地映射/命令）
 	local on_attach = function(_, bufnr)
 		-- Java 专属按键/命令
+		-- 小白提示：当前 java_keymaps() 里设置的 keymap 没有传 { buffer = bufnr }，所以是“全局映射”
+		-- 如果你只想让这些映射在 Java 文件中生效，可以在 vim.keymap.set 里加上 { buffer = bufnr }
 		java_keymaps()
 
 		-- 启用 jdtls 的 DAP 支持（调试）
