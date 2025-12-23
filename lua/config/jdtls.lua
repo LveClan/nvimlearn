@@ -332,6 +332,9 @@ local function setup_jdtls()
 		extendedClientCapabilities = extendedClientCapabilities,
 	}
 
+	-- CodeLens 刷新用的 autocmd group（buffer-local 注册，避免重复叠加）
+	local codelens_group = vim.api.nvim_create_augroup("jdtls_codelens", { clear = false })
+
 	-- on_attach：当 jdtls 成功附加到当前 buffer 后执行（这里最适合放 buffer 本地映射/命令）
 	local on_attach = function(_, bufnr)
 		-- Java 专属按键/命令
@@ -353,13 +356,16 @@ local function setup_jdtls()
 		require("jdtls.setup").add_commands()
 
 		-- 刷新 CodeLens（引用数/实现数等）
-		vim.lsp.codelens.refresh()
+		vim.lsp.codelens.refresh({ bufnr = bufnr })
 
-		-- 保存 Java 文件后自动刷新 CodeLens（用 pcall 防止偶发报错中断）
+		-- 保存后自动刷新 CodeLens（buffer-local，避免重复注册）
+		vim.api.nvim_clear_autocmds({ group = codelens_group, buffer = bufnr })
 		vim.api.nvim_create_autocmd("BufWritePost", {
-			pattern = { "*.java" },
+			group = codelens_group,
+			buffer = bufnr,
+			desc = "保存后刷新 CodeLens",
 			callback = function()
-				local _, _ = pcall(vim.lsp.codelens.refresh)
+				pcall(vim.lsp.codelens.refresh, { bufnr = bufnr })
 			end,
 		})
 	end
