@@ -235,7 +235,7 @@ local function setup_jdtls()
 
 			-- 自动下载源码包（便于跳转到源码/查看文档）
 			eclipse = {
-				downloadSource = true,
+				downloadSources = true,
 			},
 			maven = {
 				downloadSources = true,
@@ -290,7 +290,7 @@ local function setup_jdtls()
 			sources = {
 				organizeImports = {
 					starThreshold = 9999,
-					staticThreshold = 9999,
+					staticStarThreshold = 9999,
 				},
 			},
 
