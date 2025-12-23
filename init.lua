@@ -32,7 +32,7 @@ local opts = {
 
 require("config.options")
 require("config.keymaps")
-
+require("config.autocmds")
 -- 配置 lazy.nvim（建议放在最后执行）
 -- 告诉 lazy：所有插件 specs 都在 plugins 目录中
 -- 传入上面定义的选项
